@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SysInfo Dashboard</title>
+<style>
+/* ─── CSS custom properties ─── */
+:root {
+  --a1:#a78bfa; --a2:#60a5fa; --green:#34d399; --orange:#fb923c;
+  --pink:#f472b4; --teal:#2dd4bf; --red:#f87171; --yellow:#fbbf24;
+  --t:.22s ease;
+}
+[data-theme="dark"]{
+  --bg:#0a0a0a; --bg2:#111; --card:#161616; --card2:#1c1c1c;
+  --border:#222; --bh:#383838; --text:#e8e8e8; --dim:#777; --muted:#444;
+  --bar:#252525; --sep:#1e1e1e; --input:#1a1a1a;
+}
+[data-theme="light"]{
+  --bg:#f4f4f5; --bg2:#fff; --card:#fff; --card2:#f9f9f9;
+  --border:#e4e4e7; --bh:#aaa; --text:#111; --dim:#555; --muted:#aaa;
+  --bar:#e4e4e7; --sep:#eee; --input:#f1f1f1;
+}
+@media(prefers-color-scheme:dark){[data-theme="system"]{
+  --bg:#0a0a0a; --bg2:#111; --card:#161616; --card2:#1c1c1c;
+  --border:#222; --bh:#383838; --text:#e8e8e8; --dim:#777; --muted:#444;
+  --bar:#252525; --sep:#1e1e1e; --input:#1a1a1a;
+}}
+@media(prefers-color-scheme:light){[data-theme="system"]{
+  --bg:#f4f4f5; --bg2:#fff; --card:#fff; --card2:#f9f9f9;
+  --border:#e4e4e7; --bh:#aaa; --text:#111; --dim:#555; --muted:#aaa;
+  --bar:#e4e4e7; --sep:#eee; --input:#f1f1f1;
+}}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  transition:background var(--t),color var(--t)}
+
+/* ─── topbar ─── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 24px;height:56px;
+  display:flex;align-items:center;gap:16px;
+  backdrop-filter:blur(12px);
+  transition:background var(--t),border-color var(--t);
+}
+.topbar-logo{
+  font-size:.95rem;font-weight:700;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  white-space:nowrap;
+}
+.topbar-host{font-size:.75rem;color:var(--dim);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.theme-seg{display:flex;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;}
+.theme-seg button{border:none;background:none;color:var(--dim);
+  padding:6px 12px;font-size:.72rem;cursor:pointer;
+  transition:background var(--t),color var(--t);display:flex;align-items:center;gap:4px;}
+.theme-seg button:hover{background:var(--border);color:var(--text);}
+.theme-seg button.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;}
+.btn{display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border:1px solid var(--border);border-radius:8px;
+  background:var(--card);color:var(--text);font-size:.75rem;
+  cursor:pointer;font-weight:600;white-space:nowrap;
+  transition:border-color var(--t),background var(--t),opacity var(--t);}
+.btn:hover{border-color:var(--a2);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn.primary{background:linear-gradient(135deg,var(--a1),var(--a2));
+  color:#fff;border:none;}
+.btn.primary:hover{opacity:.9;}
+.spin-icon{display:inline-block;}
+.spinning .spin-icon{animation:rot .7s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg)}}
+#ts{font-size:.68rem;color:var(--muted);white-space:nowrap;}
+
+/* ─── OS pill ─── */
+#os-pill{
+  display:flex;align-items:center;gap:10px;
+  margin:20px auto 0;max-width:480px;
+  padding:10px 18px;border-radius:40px;
+  border:1px solid var(--border);background:var(--card);
+  font-size:.82rem;transition:background var(--t),border-color var(--t);
+}
+#os-pill .icon{font-size:1.4rem;}
+#os-pill .name{font-weight:700;font-size:.9rem;}
+#os-pill .ver{color:var(--dim);font-size:.75rem;}
+
+/* ─── nav tabs ─── */
+.nav{display:flex;gap:4px;justify-content:center;
+  padding:16px 24px 0;flex-wrap:wrap;}
+.nav-tab{border:none;background:none;color:var(--dim);
+  padding:7px 14px;font-size:.78rem;cursor:pointer;border-radius:8px;
+  font-weight:500;transition:background var(--t),color var(--t);}
+.nav-tab:hover{background:var(--card);color:var(--text);}
+.nav-tab.on{background:var(--card);color:var(--text);
+  box-shadow:0 0 0 1px var(--border);}
+
+/* ─── sections ─── */
+.section{display:none;padding:20px 24px 40px;max-width:1400px;margin:0 auto;}
+.section.on{display:block;}
+
+/* ─── grid ─── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:16px;}
+.grid-2{grid-template-columns:repeat(auto-fill,minmax(460px,1fr));}
+.grid-wide{grid-template-columns:1fr;}
+
+/* ─── card ─── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;transition:border-color var(--t),background var(--t),box-shadow .2s;}
+.card:hover{border-color:var(--bh);box-shadow:0 2px 20px rgba(0,0,0,.15);}
+.card-hd{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.cico{width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;}
+.ci-pu{background:rgba(167,139,250,.15);}
+.ci-bl{background:rgba(96,165,250,.15);}
+.ci-gr{background:rgba(52,211,153,.15);}
+.ci-or{background:rgba(251,146,60,.15);}
+.ci-pk{background:rgba(244,114,182,.15);}
+.ci-te{background:rgba(45,212,191,.15);}
+.ci-re{background:rgba(248,113,113,.15);}
+.ci-ye{background:rgba(251,191,36,.15);}
+.card-title{font-size:.88rem;font-weight:700;color:var(--text);}
+.card-sub{font-size:.7rem;color:var(--dim);margin-top:1px;}
+
+/* ─── kv table ─── */
+.kv{width:100%;border-collapse:collapse;}
+.kv tr+tr td{border-top:1px solid var(--sep);}
+.kv td{padding:8px 0;font-size:.8rem;vertical-align:top;}
+.kv td:first-child{color:var(--dim);width:44%;padding-right:8px;}
+.kv td:last-child{color:var(--text);font-weight:500;word-break:break-all;}
+
+/* ─── badge ─── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:.67rem;font-weight:700;white-space:nowrap;}
+.bg{background:rgba(52,211,153,.15);color:var(--green);}
+.bb{background:rgba(96,165,250,.15);color:var(--a2);}
+.bp{background:rgba(167,139,250,.15);color:var(--a1);}
+.bo{background:rgba(251,146,60,.15);color:var(--orange);}
+.br{background:rgba(248,113,113,.15);color:var(--red);}
+.bx{background:rgba(150,150,150,.12);color:var(--dim);}
+
+/* ─── progress bar ─── */
+.prog-wrap{background:var(--bar);border-radius:4px;height:5px;
+  margin-top:5px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;
+  background:linear-gradient(90deg,var(--a1),var(--a2));
+  transition:width .7s ease;}
+.prog-fill.warn{background:var(--orange);}
+.prog-fill.crit{background:var(--red);}
+.prog-lbl{display:flex;justify-content:space-between;
+  font-size:.64rem;color:var(--muted);margin-top:3px;}
+
+/* ─── stat tiles ─── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
+.tile{background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 10px;text-align:center;}
+.tile-val{font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1;}
+.tile-lbl{font-size:.65rem;color:var(--dim);margin-top:4px;}
+
+/* ─── donut ─── */
+.donut-wrap{display:flex;align-items:center;gap:16px;margin-top:4px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{flex:1;}
+.donut-row{display:flex;align-items:center;gap:6px;
+  font-size:.75rem;margin-bottom:5px;}
+.donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.donut-row-lbl{color:var(--dim);flex:1;}
+.donut-row-val{font-weight:600;color:var(--text);}
+
+/* ─── port rows ─── */
+.p-row{display:flex;align-items:center;gap:8px;
+  padding:8px 0;font-size:.8rem;}
+.p-row+.p-row{border-top:1px solid var(--sep);}
+.p-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.p-dot.on{background:var(--green);box-shadow:0 0 5px var(--green);}
+.p-dot.off{background:var(--muted);}
+.p-name{flex:1;font-weight:500;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.p-dev{color:var(--dim);font-size:.68rem;white-space:nowrap;}
+.p-mac{color:var(--muted);font-size:.65rem;
+  font-family:ui-monospace,monospace;white-space:nowrap;}
+.p-ip{color:var(--green);font-size:.7rem;margin-left:4px;}
+.p-detail{display:grid;grid-template-columns:1fr 1fr;
+  gap:2px 12px;margin-top:4px;font-size:.7rem;color:var(--dim);}
+.p-detail span{white-space:nowrap;}
+
+/* ─── conn table ─── */
+.conn-table{width:100%;border-collapse:collapse;font-size:.75rem;}
+.conn-table th{padding:6px 8px;text-align:left;color:var(--dim);
+  font-weight:600;border-bottom:1px solid var(--sep);}
+.conn-table td{padding:6px 8px;border-bottom:1px solid var(--sep);
+  font-family:ui-monospace,monospace;font-size:.7rem;}
+.conn-table tr:hover td{background:var(--card2);}
+
+/* ─── wifi card ─── */
+.wifi-signal{display:flex;align-items:flex-end;gap:2px;height:20px;}
+.wifi-bar{width:5px;border-radius:2px 2px 0 0;background:var(--bar);}
+.wifi-bar.on{background:var(--green);}
+
+/* ─── speed test ─── */
+.speed-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;}
+.speed-num{font-size:2.2rem;font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;}
+.speed-unit{font-size:.75rem;color:var(--dim);margin-top:2px;}
+.speed-lbl{font-size:.7rem;color:var(--dim);margin-bottom:6px;}
+.speed-box{background:var(--card2);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;text-align:center;}
+#speed-status{font-size:.75rem;color:var(--dim);margin-top:12px;text-align:center;
+  min-height:1.2em;}
+
+/* ─── battery bar ─── */
+.bat-icon{display:flex;align-items:center;gap:2px;}
+.bat-body{width:42px;height:20px;border:2px solid var(--dim);
+  border-radius:4px;position:relative;overflow:hidden;}
+.bat-fill{height:100%;transition:width .5s;}
+.bat-tip{width:4px;height:10px;background:var(--dim);border-radius:0 2px 2px 0;}
+
+/* ─── usb / tb list ─── */
+.dev-row{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:.8rem;}
+.dev-row+.dev-row{border-top:1px solid var(--sep);}
+.dev-icon{font-size:1.1rem;flex-shrink:0;}
+.dev-name{flex:1;font-weight:500;}
+.dev-sub{color:var(--dim);font-size:.7rem;}
+
+/* ─── cpu cores visual ─── */
+.core-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:5px;}
+.core-cell{background:var(--bar);border-radius:5px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;color:var(--dim);}
+.core-cell.perf{border:1px solid rgba(167,139,250,.3);}
+.core-cell.eff {border:1px solid rgba(96,165,250,.3);}
+
+/* ─── section header ─── */
+.sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sec-hd h2{font-size:.9rem;font-weight:700;color:var(--text);}
+.sec-hd span{font-size:.72rem;color:var(--dim);}
+.divider{height:1px;background:var(--sep);margin:16px 0;}
+
+/* ─── tag ─── */
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;
+  font-size:.65rem;font-weight:600;background:var(--card2);
+  border:1px solid var(--border);color:var(--dim);margin:1px;}
+
+/* misc */
+.mono{font-family:ui-monospace,monospace;font-size:.78rem;}
+.empty{color:var(--muted);font-size:.78rem;text-align:center;padding:12px 0;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+.fw{width:100%;}
+.flex-row{display:flex;align-items:center;gap:8px;}
+footer{text-align:center;color:var(--muted);font-size:.68rem;padding:24px;}
+</style>
+</head>
+<body>
+
+<!-- ─── TOP BAR ─── -->
+<div class="topbar">
+  <span class="topbar-logo">⚡ SysInfo</span>
+  <span class="topbar-host" id="tb-host">Loading…</span>
+  <span id="ts">–</span>
+  <div class="theme-seg">
+    <button data-t="light"  onclick="setTheme('light')">☀️</button>
+    <button data-t="dark"   onclick="setTheme('dark')">🌙</button>
+    <button data-t="system" onclick="setTheme('system')">⚙️</button>
+  </div>
+  <a href="/readme" class="btn" style="text-decoration:none;">📄 Docs</a>
+  <button class="btn spinning" id="refBtn" onclick="doRefresh()">
+    <span class="spin-icon">↻</span> Refresh
+  </button>
+</div>
+
+<!-- ─── OS PILL ─── -->
+<div id="os-pill">
+  <span class="icon">💻</span>
+  <div>
+    <div class="name" id="os-name">Detecting OS…</div>
+    <div class="ver"  id="os-ver"></div>
+  </div>
+</div>
+
+<!-- ─── NAV TABS ─── -->
+<nav class="nav">
+  <button class="nav-tab on" onclick="showTab('overview')">Overview</button>
+  <button class="nav-tab"    onclick="showTab('hardware')">Hardware</button>
+  <button class="nav-tab"    onclick="showTab('network')">Network</button>
+  <button class="nav-tab"    onclick="showTab('storage')">Storage</button>
+  <button class="nav-tab"    onclick="showTab('displays')">Displays</button>
+  <button class="nav-tab"    onclick="showTab('battery')">Battery</button>
+  <button class="nav-tab"    onclick="showTab('speed')">Speed Test</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════ OVERVIEW ═══ -->
+<section class="section on" id="sec-overview">
+  <div class="grid" id="ov-tiles-row" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:16px;"></div>
+  <div class="grid" id="ov-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ HARDWARE ═══ -->
+<section class="section" id="sec-hardware">
+  <div class="grid" id="hw-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ NETWORK ════ -->
+<section class="section" id="sec-network">
+  <div class="grid grid-2" id="net-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ STORAGE ════ -->
+<section class="section" id="sec-storage">
+  <div class="grid" id="st-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ DISPLAYS ═══ -->
+<section class="section" id="sec-displays">
+  <div class="grid" id="dp-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ BATTERY ════ -->
+<section class="section" id="sec-battery">
+  <div class="grid" id="bat-grid"></div>
+</section>
+
+<!-- ═══════════════════════════════════════════ SPEED TEST ═ -->
+<section class="section" id="sec-speed">
+  <div style="max-width:600px;margin:0 auto;">
+    <div class="card">
+      <div class="card-hd">
+        <div class="cico ci-te">🌐</div>
+        <div><div class="card-title">Network Speed Test</div>
+        <div class="card-sub">Uses Apple networkQuality — measures download, upload & responsiveness</div></div>
+      </div>
+      <div class="speed-grid">
+        <div class="speed-box">
+          <div class="speed-lbl">⬇ Download</div>
+          <div class="speed-num" id="sp-dl">–</div>
+          <div class="speed-unit">Mbps</div>
+        </div>
+        <div class="speed-box">
+          <div class="speed-lbl">⬆ Upload</div>
+          <div class="speed-num" id="sp-ul">–</div>
+          <div class="speed-unit">Mbps</div>
+        </div>
+        <div class="speed-box">
+          <div class="speed-lbl">📶 Responsiveness</div>
+          <div class="speed-num" id="sp-rp">–</div>
+          <div class="speed-unit">RPM</div>
+        </div>
+        <div class="speed-box">
+          <div class="speed-lbl">⏱ Base RTT</div>
+          <div class="speed-num" id="sp-rtt">–</div>
+          <div class="speed-unit">ms</div>
+        </div>
+      </div>
+      <div id="speed-status">Click Run to start the speed test (~30 seconds)</div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="btn primary" id="spBtn" onclick="runSpeedTest()">▶ Run Speed Test</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer">SysInfo Dashboard · Generated by Claude Code</footer>
+
+<script>
+// ──────────────────────────────────────────────────────────────────────────────
+// Theme
+// ──────────────────────────────────────────────────────────────────────────────
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.querySelectorAll('.theme-seg button').forEach(b=>
+    b.classList.toggle('on',b.dataset.t===t));
+}
+setTheme(localStorage.getItem('theme')||'system');
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Tab navigation
+// ──────────────────────────────────────────────────────────────────────────────
+function showTab(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sec-'+id).classList.add('on');
+  [...document.querySelectorAll('.nav-tab')]
+    .find(b=>b.textContent.toLowerCase().includes(id.slice(0,4)))
+    ?.classList.add('on');
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+const badge=(t,c)=>`<span class="badge b${c}">${t}</span>`;
+const row=(l,v)=>`<tr><td>${l}</td><td>${v}</td></tr>`;
+function card(ico,ci,title,sub,body){
+  return `<div class="card">
+    <div class="card-hd">
+      <div class="cico ${ci}">${ico}</div>
+      <div><div class="card-title">${title}</div>${sub?`<div class="card-sub">${sub}</div>`:''}</div>
+    </div>${body}</div>`;
+}
+function pb(pct,extra=''){
+  const cls=pct>85?'crit':pct>60?'warn':'';
+  return `<div class="prog-wrap"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div>
+    <div class="prog-lbl"><span>${extra||''}</span><span>${pct}%</span></div>`;
+}
+function fmt_bytes(b){
+  if(b>1e12)return(b/1e12).toFixed(1)+' TB';
+  if(b>1e9) return(b/1e9).toFixed(1)+' GB';
+  if(b>1e6) return(b/1e6).toFixed(1)+' MB';
+  return b+' B';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// OS banner
+// ──────────────────────────────────────────────────────────────────────────────
+const OS_MAP={macOS:{icon:'🍎',col:'#a78bfa'},Linux:{icon:'🐧',col:'#60a5fa'},Windows:{icon:'🪟',col:'#34d399'}};
+function setBanner(os,ver){
+  const m=OS_MAP[os]||{icon:'💻',col:'#888'};
+  document.getElementById('os-pill').querySelector('.icon').textContent=m.icon;
+  const nm=document.getElementById('os-name');
+  nm.textContent=os; nm.style.color=m.col;
+  document.getElementById('os-ver').textContent=ver||'';
+  document.title=`SysInfo — ${os}`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CPU donut
+// ──────────────────────────────────────────────────────────────────────────────
+function cpuDonut(cpu){
+  const user=cpu.user||0, sys=cpu.sys||0, idle=cpu.idle||100;
+  const r=40,cx=50,cy=50,circ=2*Math.PI*r;
+  function arc(val,offset,color){
+    const dash=(val/100)*circ, gap=circ-dash;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}"
+      stroke-width="10" stroke-dasharray="${dash} ${gap}"
+      stroke-dashoffset="${-offset/100*circ}" stroke-linecap="round"/>`;
+  }
+  const svg=`<svg class="donut-svg" width="90" height="90" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bar)" stroke-width="10"/>
+    ${arc(user,0,'#a78bfa')}
+    ${arc(sys,user,'#60a5fa')}
+    <text x="50" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text)">${(100-idle).toFixed(0)}%</text>
+    <text x="50" y="58" text-anchor="middle" font-size="7" fill="var(--dim)">used</text>
+  </svg>`;
+  const legend=`
+    <div class="donut-row"><div class="donut-dot" style="background:#a78bfa"></div>
+      <span class="donut-row-lbl">User</span><span class="donut-row-val">${user.toFixed(1)}%</span></div>
+    <div class="donut-row"><div class="donut-dot" style="background:#60a5fa"></div>
+      <span class="donut-row-lbl">System</span><span class="donut-row-val">${sys.toFixed(1)}%</span></div>
+    <div class="donut-row"><div class="donut-dot" style="background:var(--bar)"></div>
+      <span class="donut-row-lbl">Idle</span><span class="donut-row-val">${idle.toFixed(1)}%</span></div>
+    ${cpu.load&&cpu.load.length?`<div class="donut-row" style="margin-top:4px">
+      <div class="donut-dot" style="background:var(--dim)"></div>
+      <span class="donut-row-lbl">Load avg</span>
+      <span class="donut-row-val">${cpu.load.map(x=>x.toFixed(2)).join(' ')}</span></div>`:''}
+  `;
+  return `<div class="donut-wrap">${svg}<div class="donut-legend">${legend}</div></div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Memory donut
+// ──────────────────────────────────────────────────────────────────────────────
+function memDonut(m){
+  const pct=m.pct||0;
+  const r=40,circ=2*Math.PI*r;
+  const dash=(pct/100)*circ,gap=circ-dash;
+  const col=pct>85?'#f87171':pct>60?'#fb923c':'#a78bfa';
+  const svg=`<svg class="donut-svg" width="90" height="90" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bar)" stroke-width="10"/>
+    <circle cx="50" cy="50" r="40" fill="none" stroke="${col}"
+      stroke-width="10" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-circ/4}"
+      stroke-linecap="round"/>
+    <text x="50" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text)">${pct}%</text>
+    <text x="50" y="58" text-anchor="middle" font-size="7" fill="var(--dim)">used</text>
+  </svg>`;
+  const legend=`
+    <div class="donut-row"><div class="donut-dot" style="background:${col}"></div>
+      <span class="donut-row-lbl">Used</span><span class="donut-row-val">${m.used_gb} GB</span></div>
+    <div class="donut-row"><div class="donut-dot" style="background:var(--green)"></div>
+      <span class="donut-row-lbl">Free</span><span class="donut-row-val">${m.free_gb} GB</span></div>
+    ${m.wired_mb?`<div class="donut-row"><div class="donut-dot" style="background:#f472b4"></div>
+      <span class="donut-row-lbl">Wired</span><span class="donut-row-val">${m.wired_mb} MB</span></div>`:''}
+    ${m.compressed_mb?`<div class="donut-row"><div class="donut-dot" style="background:#fbbf24"></div>
+      <span class="donut-row-lbl">Compressed</span><span class="donut-row-val">${m.compressed_mb} MB</span></div>`:''}
+  `;
+  return `<div class="donut-wrap">${svg}<div class="donut-legend">${legend}</div></div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// WiFi signal bars
+// ──────────────────────────────────────────────────────────────────────────────
+function wifiBars(snr){
+  const bars=snr>30?4:snr>20?3:snr>10?2:snr>0?1:0;
+  const heights=[8,12,16,20];
+  return `<div class="wifi-signal">${heights.map((h,i)=>
+    `<div class="wifi-bar ${i<bars?'on':''}" style="height:${h}px"></div>`).join('')}</div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Battery icon
+// ──────────────────────────────────────────────────────────────────────────────
+function batIcon(pct){
+  const col=pct>20?'var(--green)':pct>10?'var(--orange)':'var(--red)';
+  return `<div class="bat-icon">
+    <div class="bat-body">
+      <div class="bat-fill" style="width:${pct}%;background:${col}"></div>
+    </div>
+    <div class="bat-tip"></div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Render
+// ──────────────────────────────────────────────────────────────────────────────
+let G={};
+
+function render(d){
+  G=d;
+  const hw=d.hardware||{}, sw=d.software||{}, os=d.os||'Unknown';
+  const cpu=d.cpu||{}, mem=d.memory_detail||{}, bat=d.battery||{};
+  const wifi=d.wifi||{};
+
+  setBanner(os,sw.os||'');
+  document.getElementById('tb-host').textContent=
+    `${sw.host||'localhost'} · ${sw.user||''} · ${sw.os||''}`;
+  document.getElementById('ts').textContent=`Refreshed: ${d.refreshed||'–'}`;
+
+  // ── OVERVIEW ─────────────────────────────────────────────────────────────
+  const tiles=[
+    {v:hw.chip||'–',          l:'Processor'},
+    {v:hw.memory||'–',        l:'Memory'},
+    {v:cpu.load?cpu.load[0]?.toFixed(2):'–', l:'Load (1m)'},
+    {v:mem.pct?mem.pct+'%':'–', l:'RAM Used'},
+    {v:(d.storage||[]).length, l:'Volumes'},
+    {v:(d.ports||[]).filter(p=>p.ip).length+' active', l:'Net Interfaces'},
+  ];
+  document.getElementById('ov-tiles-row').innerHTML=tiles.map(t=>
+    `<div class="card" style="text-align:center;padding:16px 12px;">
+      <div style="font-size:1.1rem;font-weight:800;
+        background:linear-gradient(135deg,var(--a1),var(--a2));
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+        background-clip:text;">${t.v}</div>
+      <div style="font-size:.68rem;color:var(--dim);margin-top:4px;">${t.l}</div>
+    </div>`).join('');
+
+  const ovCards=[];
+
+  // CPU overview
+  ovCards.push(card('⚙️','ci-pu','CPU',`${hw.chip||''}`,
+    cpuDonut(cpu)+
+    `<div class="divider"></div>
+    <div class="tiles">
+      ${hw.perf_cores?`<div class="tile"><div class="tile-val">${hw.perf_cores}</div><div class="tile-lbl">P-Cores</div></div>`:''}
+      ${hw.eff_cores?`<div class="tile"><div class="tile-val">${hw.eff_cores}</div><div class="tile-lbl">E-Cores</div></div>`:''}
+      ${hw.gpu_cores?`<div class="tile"><div class="tile-val">${hw.gpu_cores}</div><div class="tile-lbl">GPU Cores</div></div>`:''}
+      ${cpu.processes?`<div class="tile"><div class="tile-val">${cpu.processes}</div><div class="tile-lbl">Processes</div></div>`:''}
+      ${cpu.threads?`<div class="tile"><div class="tile-val">${cpu.threads}</div><div class="tile-lbl">Threads</div></div>`:''}
+    </div>`));
+
+  // Memory overview
+  ovCards.push(card('🧠','ci-bl','Memory',`${hw.memory||''} Unified`,
+    memDonut(mem)+
+    `<div class="divider"></div>
+    <table class="kv">
+      ${row('Total',    mem.total_gb+' GB')}
+      ${row('Used',     mem.used_gb+' GB')}
+      ${row('Free',     mem.free_gb+' GB')}
+      ${mem.wired_mb?row('Wired',mem.wired_mb+' MB'):''}
+      ${mem.compressed_mb?row('Compressed',mem.compressed_mb+' MB'):''}
+      ${mem.active_mb?row('Active',mem.active_mb+' MB'):''}
+    </table>`));
+
+  // Software overview
+  const sipB=(sw.sip||'').toLowerCase().includes('enabled')?badge('Enabled','g'):badge('–','x');
+  ovCards.push(card('🖥️','ci-bl','System Software','',
+    `<table class="kv">
+      ${row('OS',      sw.os||'–')}
+      ${row('Kernel',  sw.kernel||'–')}
+      ${row('Host',    sw.host||'–')}
+      ${row('User',    sw.user||'–')}
+      ${row('Uptime',  sw.uptime||'–')}
+      ${row('Boot',    badge(sw.boot||'Normal','g'))}
+      ${os==='macOS'?row('SIP',sipB):''}
+      ${hw.model_id?row('Model ID',hw.model_id):''}
+    </table>`));
+
+  // WiFi overview
+  if(wifi.connected){
+    const secLabel=(wifi.security||'').replace(/spairport_security_mode_?/gi,'').replace(/_/g,' ');
+    ovCards.push(card('📶','ci-te','Wi-Fi',`Connected · ${wifi.ssid}`,
+      `<div class="flex-row mt8">${wifiBars(wifi.snr||0)}
+        <span style="font-size:.78rem;color:var(--dim)">SNR: ${wifi.snr||'–'} dB</span>
+      </div>
+      <table class="kv mt8">
+        ${row('SSID',     `<b>${wifi.ssid}</b>`)}
+        ${row('Signal',   wifi.signal||'–')}
+        ${row('Noise',    wifi.noise||'–')}
+        ${row('Channel',  wifi.channel||'–')}
+        ${row('Standard', wifi.phy_mode||'–')}
+        ${row('Security', secLabel||'–')}
+        ${row('Country',  wifi.country||'–')}
+        ${wifi.mcs?row('MCS Index',wifi.mcs):''}
+      </table>`));
+  } else {
+    ovCards.push(card('📶','ci-te','Wi-Fi','Not connected',
+      `<p class="empty">No Wi-Fi connection detected</p>`));
+  }
+
+  // Battery overview (if present)
+  if(bat.present){
+    const pct=bat.charge_pct||0;
+    const src=bat.power_source==='AC Power'?badge('AC Power','g'):badge('Battery','o');
+    ovCards.push(card('🔋','ci-ye','Battery',`${pct}% · ${bat.health||'–'}`,
+      `<div class="flex-row mt8">${batIcon(pct)}
+        <span style="font-size:.88rem;font-weight:700;">${pct}%</span>
+        ${src}
+        ${bat.charging?badge('Charging','g'):''}
+        ${bat.fully_charged?badge('Charged','g'):''}
+      </div>
+      ${pb(pct)}`+
+      `<table class="kv mt12">
+        ${row('Health',       bat.health||'–')}
+        ${row('Max Capacity', bat.max_capacity||'–')}
+        ${row('Cycle Count',  bat.cycle_count||'–')}
+        ${bat.time_remaining&&bat.time_remaining!=='–'?row('Time Remaining',bat.time_remaining):''}
+        ${bat.serial&&bat.serial!=='–'?row('Serial',`<span class="mono">${bat.serial}</span>`):''}
+      </table>`));
+  }
+
+  document.getElementById('ov-grid').innerHTML=ovCards.join('');
+
+  // ── HARDWARE ─────────────────────────────────────────────────────────────
+  const hwCards=[];
+
+  // Full hardware spec
+  hwCards.push(card('💻','ci-pu','Machine Specification','',
+    `<table class="kv">
+      ${row('Model',        hw.model||'–')}
+      ${hw.model_id?row('Model ID',hw.model_id):''}
+      ${hw.model_number?row('Model Number',`<span class="mono">${hw.model_number}</span>`):''}
+      ${row('Chip',         hw.chip||'–')}
+      ${row('Cores',        hw.cores||'–')}
+      ${hw.perf_cores?row('Performance Cores',hw.perf_cores):''}
+      ${hw.eff_cores?row('Efficiency Cores',hw.eff_cores):''}
+      ${hw.gpu_cores?row('GPU Cores',hw.gpu_cores):''}
+      ${row('Memory',       hw.memory||'–')}
+      ${hw.serial?row('Serial Number',`<span class="mono">${hw.serial}</span>`):''}
+      ${hw.firmware?row('Firmware Version',hw.firmware):''}
+      ${hw.platform_uuid?row('Platform UUID',`<span class="mono" style="font-size:.68rem">${hw.platform_uuid}</span>`):''}
+    </table>`));
+
+  // CPU detail
+  const coreRows=[];
+  if(hw.perf_cores>0){
+    for(let i=0;i<hw.perf_cores;i++) coreRows.push(`<div class="core-cell perf" title="P-Core ${i+1}">P</div>`);
+  }
+  if(hw.eff_cores>0){
+    for(let i=0;i<hw.eff_cores;i++) coreRows.push(`<div class="core-cell eff" title="E-Core ${i+1}">E</div>`);
+  }
+  hwCards.push(card('⚙️','ci-pu','CPU Detail','',
+    `${cpuDonut(cpu)}
+    ${coreRows.length?`<div class="divider"></div>
+      <div style="font-size:.72rem;color:var(--dim);margin-bottom:6px;">Core layout — ${badge('P-Core','p')} ${badge('E-Core','b')}</div>
+      <div class="core-grid">${coreRows.join('')}</div>`:''}
+    ${cpu.load&&cpu.load.length?`<div class="divider"></div>
+      <table class="kv">
+        ${row('Load (1m)',  cpu.load[0]?.toFixed(2))}
+        ${row('Load (5m)',  cpu.load[1]?.toFixed(2))}
+        ${row('Load (15m)', cpu.load[2]?.toFixed(2))}
+        ${cpu.processes?row('Processes',cpu.processes):''}
+        ${cpu.threads?row('Threads',cpu.threads):''}
+      </table>`:''}
+  `));
+
+  // Memory detail
+  hwCards.push(card('🧠','ci-bl','Memory Detail','',
+    memDonut(mem)+
+    `<div class="divider"></div>
+    <table class="kv">
+      ${row('Total RAM',  mem.total_gb+' GB')}
+      ${row('Used',       mem.used_gb+' GB')}
+      ${row('Free',       mem.free_gb+' GB')}
+      ${mem.wired_mb?row('Wired',     mem.wired_mb+' MB'):''}
+      ${mem.active_mb?row('Active',   mem.active_mb+' MB'):''}
+      ${mem.inactive_mb?row('Inactive',mem.inactive_mb+' MB'):''}
+      ${mem.compressed_mb?row('Compressed',mem.compressed_mb+' MB'):''}
+    </table>`));
+
+  document.getElementById('hw-grid').innerHTML=hwCards.join('');
+
+  // ── NETWORK ──────────────────────────────────────────────────────────────
+  const netCards=[];
+  const nm=d.network_meta||{};
+
+  // Gateway / DNS
+  netCards.push(card('🌍','ci-te','Network Configuration','',
+    `<table class="kv">
+      ${row('Gateway',     nm.gateway||'–')}
+      ${nm.dns&&nm.dns.length?row('DNS Servers', nm.dns.map(s=>`<span class="tag">${s}</span>`).join(' ')):''}
+      ${nm.domains&&nm.domains.length?row('Search Domains', nm.domains.map(s=>`<span class="tag">${s}</span>`).join(' ')):''}
+    </table>`));
+
+  // Interfaces
+  const ifaces=d.ports||[];
+  const ifaceHtml=ifaces.map(p=>{
+    const on=!!p.ip||p.status==='active'||p.status==='UP';
+    return `<div class="p-row">
+      <div class="p-dot ${on?'on':'off'}"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="flex-row" style="flex-wrap:wrap;gap:4px;">
+          <span class="p-name">${p.name}</span>
+          ${p.ip?`<span class="p-ip">${p.ip}</span>`:''}
+          ${badge(on?'Active':'Inactive', on?'g':'x')}
+        </div>
+        <div class="p-detail">
+          <span>Dev: ${p.device||'–'}</span>
+          <span>MTU: ${p.mtu||'–'}</span>
+          <span class="p-mac">${p.mac||''}</span>
+          ${p.ip6?`<span>${p.ip6}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  netCards.push(card('🔌','ci-te','Network Interfaces',`${ifaces.length} interfaces · ${ifaces.filter(p=>p.ip).length} active`,
+    ifaceHtml||'<p class="empty">No interfaces</p>'));
+
+  // WiFi
+  if(wifi.connected){
+    const sec=(wifi.security||'').replace(/spairport_security_mode_?/gi,'').replace(/_/g,' ');
+    netCards.push(card('📶','ci-bl','Wi-Fi Connection',`${wifi.ssid}`,
+      `<div class="flex-row mt8">${wifiBars(wifi.snr||0)}
+        <div>
+          <div style="font-size:.78rem;color:var(--dim)">${wifi.signal||'–'} signal · ${wifi.noise||'–'} noise</div>
+          <div style="font-size:.72rem;color:var(--muted)">SNR: ${wifi.snr||'–'} dB</div>
+        </div>
+      </div>
+      <table class="kv mt12">
+        ${row('SSID',      `<b>${wifi.ssid}</b>`)}
+        ${row('Channel',   wifi.channel||'–')}
+        ${row('Standard',  wifi.phy_mode||'–')}
+        ${row('Security',  sec||'–')}
+        ${row('Country',   wifi.country||'–')}
+        ${wifi.mcs?row('MCS Index',wifi.mcs):''}
+      </table>`));
+
+    if(wifi.nearby&&wifi.nearby.length){
+      const nearRows=wifi.nearby.map(n=>`<tr>
+        <td>${n.ssid}</td>
+        <td>${n.channel}</td>
+        <td><span class="tag">${(n.security||'').replace(/spairport_security_mode_?/gi,'').replace(/_/g,' ')}</span></td>
+      </tr>`).join('');
+      netCards.push(card('📡','ci-bl','Nearby Networks',`${wifi.nearby.length} visible`,
+        `<table class="conn-table">
+          <tr><th>SSID</th><th>Channel</th><th>Security</th></tr>
+          ${nearRows}
+        </table>`));
+    }
+  }
+
+  // Interface stats
+  const stats=d.iface_stats||[];
+  if(stats.length){
+    const statRows=stats.map(s=>`<tr>
+      <td>${s.iface}</td>
+      <td>${fmt_bytes(s.ibytes)}</td>
+      <td>${fmt_bytes(s.obytes)}</td>
+      <td>${s.ierrs}</td>
+      <td>${s.oerrs}</td>
+    </tr>`).join('');
+    netCards.push(card('📊','ci-te','Interface Traffic','Cumulative since boot',
+      `<table class="conn-table">
+        <tr><th>Interface</th><th>↓ Bytes In</th><th>↑ Bytes Out</th><th>Err In</th><th>Err Out</th></tr>
+        ${statRows}
+      </table>`));
+  }
+
+  // Listening ports
+  const listening=d.listening||[];
+  if(listening.length){
+    const lRows=listening.map(l=>
+      `<tr><td>${l.proto}</td><td>${l.port}</td><td class="mono">${l.addr}</td></tr>`
+    ).join('');
+    netCards.push(card('🔒','ci-re','Listening Ports',`${listening.length} open ports`,
+      `<table class="conn-table">
+        <tr><th>Proto</th><th>Port</th><th>Local Address</th></tr>
+        ${lRows}
+      </table>`));
+  }
+
+  // Active connections
+  const conns=d.connections||[];
+  if(conns.length){
+    const cRows=conns.slice(0,20).map(c=>
+      `<tr><td>${c.proto}</td><td class="mono">${c.local}</td><td class="mono">${c.remote}</td><td>${badge('ESTABLISHED','g')}</td></tr>`
+    ).join('');
+    netCards.push(card('🔗','ci-gr','Active TCP Connections',`${conns.length} established`,
+      `<table class="conn-table">
+        <tr><th>Proto</th><th>Local</th><th>Remote</th><th>State</th></tr>
+        ${cRows}
+      </table>`));
+  }
+
+  document.getElementById('net-grid').innerHTML=netCards.join('');
+
+  // ── STORAGE ──────────────────────────────────────────────────────────────
+  const stCards=(d.storage||[]).map(v=>{
+    const pct=v.pct||0;
+    return card('💾','ci-gr',v.name||v.mount,`Mount: ${v.mount}`,
+      `<table class="kv">
+        ${row('Filesystem', v.fs||'–')}
+        ${row('Total',      v.total+' GB')}
+        ${row('Used',       v.used+' GB')}
+        ${row('Free',       v.free+' GB')}
+        ${row('Usage',      '')}
+      </table>
+      ${pb(pct,v.used+' / '+v.total+' GB')}`);
+  });
+  document.getElementById('st-grid').innerHTML=stCards.join('')||'<p class="empty">No volumes detected</p>';
+
+  // ── DISPLAYS ─────────────────────────────────────────────────────────────
+  const dpCards=(d.displays||[]).map((disp,i)=>{
+    const sub=[disp.res,disp.refresh].filter(Boolean).join(' @ ');
+    return card(i===0?'🖥️':'🖥️','ci-or',disp.name||`Display ${i+1}`,sub,
+      `<table class="kv">
+        ${row('Resolution', disp.res||'–')}
+        ${disp.refresh?row('Refresh Rate',disp.refresh):''}
+        ${disp.type?row('Type',disp.type):''}
+        ${disp.conn?row('Connection',disp.conn):''}
+        ${disp.gpu?row('GPU',disp.gpu):''}
+      </table>`);
+  });
+  document.getElementById('dp-grid').innerHTML=dpCards.join('')||'<p class="empty">No displays detected</p>';
+
+  // ── BATTERY ──────────────────────────────────────────────────────────────
+  if(bat.present){
+    const pct=bat.charge_pct||0;
+    const batCards=[];
+    batCards.push(card('🔋','ci-ye','Battery Status','',
+      `<div class="flex-row mt8" style="gap:16px;">
+        ${batIcon(pct)}
+        <div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;">${pct}%</div>
+          <div style="font-size:.75rem;color:var(--dim);">${bat.power_source||'–'}</div>
+        </div>
+        <div>
+          ${bat.charging?badge('Charging','g'):''}
+          ${bat.fully_charged?badge('Fully Charged','g'):''}
+        </div>
+      </div>
+      ${pb(pct)}
+      <table class="kv mt12">
+        ${row('Power Source',   bat.power_source||'–')}
+        ${row('Charge',         pct+'%')}
+        ${row('Health',         bat.health||'–')}
+        ${row('Max Capacity',   bat.max_capacity||'–')}
+        ${row('Cycle Count',    bat.cycle_count||'–')}
+        ${bat.time_remaining&&bat.time_remaining!=='–'?row('Time Remaining',bat.time_remaining):''}
+        ${bat.serial&&bat.serial!=='–'?row('Battery Serial',`<span class="mono">${bat.serial}</span>`):''}
+      </table>`));
+    document.getElementById('bat-grid').innerHTML=batCards.join('');
+  } else {
+    document.getElementById('bat-grid').innerHTML=
+      '<p class="empty" style="margin-top:40px;">No battery detected or not applicable</p>';
+  }
+
+  // Thunderbolt
+  const tbs=d.thunderbolt||[];
+  if(tbs.length){
+    const tbCard2=card('⚡','ci-pk','Thunderbolt / USB4',`${tbs.length} buses`,
+      tbs.map((t,i)=>{
+        const on=!t.status.toLowerCase().includes('no device');
+        return `<div class="dev-row">
+          <div class="dev-icon">${on?'🔌':'○'}</div>
+          <div>
+            <div class="dev-name">Bus ${i} — Port ${i+1}</div>
+            <div class="dev-sub">${t.status} · ${t.speed}</div>
+          </div>
+          ${on?badge('Connected','g'):badge('Empty','x')}
+        </div>`;
+      }).join(''));
+    document.getElementById('bat-grid').innerHTML+=tbCard2;
+  }
+
+  document.getElementById('footer').textContent=
+    `SysInfo Dashboard · ${os} · ${hw.model||''} ${hw.chip||''} · Generated by Claude Code`.trim();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Speed test
+// ──────────────────────────────────────────────────────────────────────────────
+async function runSpeedTest(){
+  const btn=document.getElementById('spBtn');
+  const status=document.getElementById('speed-status');
+  btn.disabled=true;
+  btn.textContent='Running… (~30s)';
+  status.textContent='Testing download and upload speeds…';
+  ['sp-dl','sp-ul','sp-rp','sp-rtt'].forEach(id=>document.getElementById(id).textContent='…');
+  try{
+    const r=await fetch('/api/speedtest',{signal:AbortSignal.timeout(90000)});
+    const d=await r.json();
+    if(d.error&&!d.dl_mbps){
+      status.textContent='Error: '+d.error;
+    } else {
+      document.getElementById('sp-dl').textContent=d.dl_mbps||'–';
+      document.getElementById('sp-ul').textContent=d.ul_mbps||'–';
+      document.getElementById('sp-rp').textContent=d.responsiveness||'–';
+      document.getElementById('sp-rtt').textContent=d.base_rtt_ms?Math.round(d.base_rtt_ms):'–';
+      status.textContent=`Test completed at ${new Date().toLocaleTimeString()}`;
+    }
+  } catch(e){
+    status.textContent='Failed: '+e.message;
+  } finally{
+    btn.disabled=false;
+    btn.textContent='▶ Run Speed Test';
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Static fallback
+// ──────────────────────────────────────────────────────────────────────────────
+function staticData(){
+  return {
+    os:'macOS',
+    hardware:{model:'MacBook Pro',model_id:'Mac16,7',model_number:'Z1FP000ELD/A',
+      chip:'Apple M4 Pro',cores:'proc 14:10:4:0',perf_cores:10,eff_cores:4,gpu_cores:20,
+      memory:'48 GB',serial:'MH6KQ3YWXJ',firmware:'18000.101.7',
+      platform_uuid:'A50A0EAC-C446-5DD8-A66B-E285EF7C73CD'},
+    software:{os:'macOS 26.4.1 (25E253)',kernel:'Darwin 25.4.0',host:'sthanna-ltmmh6k',
+      user:'Sudhir Kumar Thanna (sthanna)',uptime:'~18 hrs',boot:'Normal',sip:'Enabled'},
+    cpu:{user:3.0,sys:7.5,idle:89.5,load:[3.39,3.10,3.41],processes:942,threads:5364},
+    memory_detail:{total_gb:48,used_gb:44.6,free_gb:3.3,wired_mb:2697,
+      active_mb:21299,inactive_mb:20556,compressed_mb:2054,free_mb:3377,pct:93},
+    battery:{present:true,charge_pct:100,charging:false,fully_charged:true,
+      health:'Good',max_capacity:'100 %',cycle_count:3,
+      power_source:'AC Power',time_remaining:'–',serial:'F5DHM4004FV0000FWP'},
+    wifi:{connected:true,ssid:'MyNetwork',channel:'132 (5GHz, 40MHz)',
+      phy_mode:'802.11ax',security:'WPA2 PERSONAL',signal:'-56 dBm',
+      noise:'-97 dBm',snr:41,country:'DE',mcs:9,nearby:[]},
+    storage:[{name:'Macintosh HD',mount:'/',fs:'APFS',total:926,used:12,free:830,pct:2}],
+    displays:[
+      {name:'Color LCD',res:'3456 × 2234',type:'Built-in Liquid Retina XDR',refresh:'',conn:'Internal',gpu:'Apple M4 Pro'},
+      {name:'DELL U2419H',res:'1920 × 1080',type:'External',refresh:'60Hz',conn:'DisplayPort',gpu:'Apple M4 Pro'},
+      {name:'DELL U2419H',res:'1920 × 1080',type:'External',refresh:'60Hz',conn:'DisplayPort',gpu:'Apple M4 Pro'},
+    ],
+    ports:[
+      {name:'Wi-Fi',device:'en0',mac:'84:2f:57:d7:68:70',ip:'10.150.232.71',ip6:'fe80::1',status:'active',mtu:'1500'},
+      {name:'Dell Universal Dock D6000',device:'en8',mac:'9c:eb:e8:94:f6:ab',ip:null,status:'inactive',mtu:'1500'},
+      {name:'Ethernet Adapter',device:'en4',mac:'26:22:e7:f1:d5:ab',ip:null,status:'inactive',mtu:'1500'},
+      {name:'Thunderbolt Bridge',device:'bridge0',mac:'36:af:89:2f:01:c0',ip:null,status:'inactive',mtu:'1500'},
+    ],
+    iface_stats:[
+      {iface:'en0',ibytes:33123456789,obytes:3102345678,ierrs:0,oerrs:0},
+      {iface:'en8',ibytes:0,obytes:0,ierrs:0,oerrs:0},
+    ],
+    connections:[
+      {proto:'tcp4',local:'10.150.232.71.52001',remote:'142.251.14.95.443',state:'ESTABLISHED'},
+      {proto:'tcp4',local:'10.150.232.71.52002',remote:'216.239.36.223.443',state:'ESTABLISHED'},
+    ],
+    listening:[
+      {proto:'tcp46',port:8765,addr:'*.8765'},
+      {proto:'tcp4',port:5000,addr:'127.0.0.1.5000'},
+    ],
+    thunderbolt:[
+      {status:'No device connected',speed:'Up to 120 Gb/s'},
+      {status:'No device connected',speed:'Up to 120 Gb/s'},
+      {status:'No device connected',speed:'Up to 120 Gb/s'},
+    ],
+    network_meta:{gateway:'10.150.240.1',dns:['100.64.0.1','100.64.0.2'],
+      domains:['internal.salesforce.com','tsi.lan']},
+    refreshed:new Date().toLocaleString(),
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Refresh
+// ──────────────────────────────────────────────────────────────────────────────
+const API=window.location.hostname==='localhost'?'/api/sysinfo':null;
+
+async function doRefresh(){
+  const btn=document.getElementById('refBtn');
+  btn.classList.add('spinning');
+  try{
+    if(!API){render(staticData());return;}
+    const r=await fetch(API);
+    if(!r.ok)throw new Error(r.status);
+    render(await r.json());
+  }catch{render(staticData());}
+  finally{btn.classList.remove('spinning');}
+}
+
+doRefresh();
+</script>
+</body>
+</html>

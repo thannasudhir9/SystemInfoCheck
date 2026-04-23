@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>README — SysInfo Dashboard</title>
+<style>
+:root{--a1:#a78bfa;--a2:#60a5fa;--green:#34d399;--orange:#fb923c;--t:.22s ease;}
+[data-theme="dark"]{--bg:#0a0a0a;--bg2:#111;--card:#161616;--border:#222;--bh:#383838;
+  --text:#e8e8e8;--dim:#777;--muted:#444;--sep:#1e1e1e;--code:#1e1e2e;--code-t:#cdd6f4;}
+[data-theme="light"]{--bg:#f4f4f5;--bg2:#fff;--card:#fff;--border:#e4e4e7;--bh:#aaa;
+  --text:#111;--dim:#555;--muted:#aaa;--sep:#eee;--code:#f5f5f5;--code-t:#333;}
+@media(prefers-color-scheme:dark){[data-theme="system"]{--bg:#0a0a0a;--bg2:#111;--card:#161616;--border:#222;--bh:#383838;--text:#e8e8e8;--dim:#777;--muted:#444;--sep:#1e1e1e;--code:#1e1e2e;--code-t:#cdd6f4;}}
+@media(prefers-color-scheme:light){[data-theme="system"]{--bg:#f4f4f5;--bg2:#fff;--card:#fff;--border:#e4e4e7;--bh:#aaa;--text:#111;--dim:#555;--muted:#aaa;--sep:#eee;--code:#f5f5f5;--code-t:#333;}}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  transition:background var(--t),color var(--t);}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);
+  border-bottom:1px solid var(--border);padding:0 24px;height:52px;
+  display:flex;align-items:center;gap:14px;backdrop-filter:blur(12px);}
+.logo{font-size:.9rem;font-weight:700;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.back{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;
+  border:1px solid var(--border);border-radius:7px;background:var(--card);
+  color:var(--text);font-size:.75rem;cursor:pointer;text-decoration:none;
+  transition:border-color var(--t);}
+.back:hover{border-color:var(--a2);}
+.spacer{flex:1;}
+.theme-seg{display:flex;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;}
+.theme-seg button{border:none;background:none;color:var(--dim);
+  padding:5px 11px;font-size:.7rem;cursor:pointer;
+  transition:background var(--t),color var(--t);}
+.theme-seg button:hover{background:var(--border);color:var(--text);}
+.theme-seg button.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;}
+
+.content{max-width:860px;margin:0 auto;padding:32px 24px 64px;}
+
+/* ── markdown styles ── */
+h1{font-size:1.8rem;font-weight:800;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+h2{font-size:1.15rem;font-weight:700;margin:32px 0 12px;color:var(--text);
+  padding-bottom:6px;border-bottom:1px solid var(--border);}
+h3{font-size:.95rem;font-weight:700;margin:20px 0 8px;color:var(--text);}
+h4{font-size:.85rem;font-weight:600;margin:16px 0 6px;color:var(--dim);}
+p{font-size:.875rem;line-height:1.7;color:var(--text);margin-bottom:12px;}
+a{color:var(--a2);text-decoration:none;}
+a:hover{text-decoration:underline;}
+ul,ol{font-size:.875rem;line-height:1.7;padding-left:22px;margin-bottom:12px;}
+li{margin-bottom:3px;}
+hr{border:none;border-top:1px solid var(--border);margin:24px 0;}
+blockquote{border-left:3px solid var(--a1);padding:8px 14px;
+  background:var(--card);border-radius:0 8px 8px 0;margin:12px 0;
+  font-size:.85rem;font-style:italic;color:var(--dim);}
+code{font-family:ui-monospace,monospace;font-size:.8rem;
+  background:var(--code);color:var(--code-t);
+  padding:2px 6px;border-radius:4px;}
+pre{background:var(--code);border:1px solid var(--border);border-radius:10px;
+  padding:16px;overflow-x:auto;margin:12px 0;}
+pre code{background:none;padding:0;font-size:.78rem;color:var(--code-t);}
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin:12px 0;}
+th{text-align:left;padding:7px 10px;color:var(--dim);font-weight:600;
+  border-bottom:2px solid var(--border);}
+td{padding:7px 10px;border-bottom:1px solid var(--sep);}
+tr:hover td{background:var(--card);}
+strong{font-weight:700;}
+em{font-style:italic;}
+.badge-prompt{display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:.68rem;font-weight:700;background:rgba(167,139,250,.15);color:var(--a1);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/" class="back">← Dashboard</a>
+  <span class="logo">📄 README — SysInfo Dashboard</span>
+  <span class="spacer"></span>
+  <div class="theme-seg">
+    <button data-t="light"  onclick="setTheme('light')">☀️</button>
+    <button data-t="dark"   onclick="setTheme('dark')">🌙</button>
+    <button data-t="system" onclick="setTheme('system')">⚙️</button>
+  </div>
+</div>
+<div class="content" id="content">Loading README…</div>
+<script>
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem('theme',t);
+  document.querySelectorAll('.theme-seg button').forEach(b=>
+    b.classList.toggle('on',b.dataset.t===t));
+}
+setTheme(localStorage.getItem('theme')||'system');
+
+// Minimal markdown → HTML renderer
+function md2html(md){
+  const lines=md.split('\n');
+  let html='',inPre=false,inTable=false,inUl=false,inOl=false;
+  function closeList(){
+    if(inUl){html+='</ul>';inUl=false;}
+    if(inOl){html+='</ol>';inOl=false;}
+  }
+  function closeTable(){if(inTable){html+='</table>';inTable=false;}}
+  function inline(s){
+    return s
+      .replace(/`([^`]+)`/g,'<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>');
+  }
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(l.startsWith('```')){
+      if(!inPre){html+='<pre><code>';inPre=true;}
+      else{html+='</code></pre>';inPre=false;}
+      continue;
+    }
+    if(inPre){html+=l.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'\n';continue;}
+    if(l.startsWith('---')){closeList();closeTable();html+='<hr>';continue;}
+    // tables
+    if(l.startsWith('|')){
+      const cells=l.split('|').slice(1,-1).map(c=>c.trim());
+      if(!inTable){html+='<table>';inTable=true;}
+      if(cells.every(c=>/^[-:]+$/.test(c))){html+='';continue;} // separator row
+      const tag=!inTable||lines[i-1]?.startsWith('|')&&!lines[i-2]?.startsWith('|')?'th':'td';
+      // check if previous was header separator
+      const prev=lines[i-1]||'';
+      const isHeader=i===0||prev.split('|').slice(1,-1).every(c=>/^[-:]+$/.test(c.trim()));
+      if(isHeader&&!html.includes('<thead')){
+        html+=`<thead><tr>${cells.map(c=>`<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>`;
+      } else {
+        html+=`<tr>${cells.map(c=>`<td>${inline(c)}</td>`).join('')}</tr>`;
+      }
+      continue;
+    }
+    if(inTable){html+='</tbody></table>';inTable=false;}
+    // headings
+    const hm=l.match(/^(#{1,4})\s+(.+)/);
+    if(hm){closeList();html+=`<h${hm[1].length}>${inline(hm[2])}</h${hm[1].length}>`;continue;}
+    // blockquote
+    if(l.startsWith('>')){closeList();html+=`<blockquote>${inline(l.slice(1).trim())}</blockquote>`;continue;}
+    // ul
+    if(l.match(/^[-*]\s/)){
+      if(!inUl){if(inOl){html+='</ol>';inOl=false;}html+='<ul>';inUl=true;}
+      html+=`<li>${inline(l.replace(/^[-*]\s/,''))}</li>`;continue;
+    }
+    // ol
+    if(l.match(/^\d+\.\s/)){
+      if(!inOl){if(inUl){html+='</ul>';inUl=false;}html+='<ol>';inOl=true;}
+      html+=`<li>${inline(l.replace(/^\d+\.\s/,''))}</li>`;continue;
+    }
+    closeList();
+    if(l.trim()===''){html+='<br>';continue;}
+    html+=`<p>${inline(l)}</p>`;
+  }
+  closeList();closeTable();
+  if(inPre)html+='</code></pre>';
+  return html;
+}
+
+fetch('/api/readme')
+  .then(r=>{if(!r.ok)throw new Error();return r.text();})
+  .then(text=>{document.getElementById('content').innerHTML=md2html(text);})
+  .catch(()=>{
+    document.getElementById('content').innerHTML=
+      '<p style="color:var(--dim)">Could not load README. Make sure the server is running.</p>';
+  });
+</script>
+</body>
+</html>
