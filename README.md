@@ -3,6 +3,8 @@
 A live, cross-platform system information dashboard built with Python + vanilla HTML/CSS/JS.
 No dependencies beyond Python 3's standard library.
 
+![SysInfo Dashboard Screenshot](screenshot.png)
+
 ---
 
 ## Project Structure
